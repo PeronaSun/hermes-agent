@@ -1120,6 +1120,15 @@ class TestPromptBuilderConstants:
         assert "Feishu" in hint
         assert "MEDIA:" in hint
         assert "Markdown" in hint
+        assert "feishu_doc_*" in hint
+        assert "feishu_drive_add_comment" in hint
+        assert "确认修改 CHANGE_ID" in hint
+        assert "feishu_bitable_read_table" in hint
+        assert "feishu_bitable_prepare_record_update" in hint
+        assert "feishu_bitable_apply_record_update" in hint
+        assert "/base/" in hint
+        assert "read_file" in hint
+        assert "Never substitute Feishu comments" in hint
 
     def test_platform_hints_webui(self):
         hint = PLATFORM_HINTS["webui"]
@@ -1644,5 +1653,3 @@ class TestParallelToolCallGuidance:
 # =========================================================================
 # Budget warning history stripping
 # =========================================================================
-
-

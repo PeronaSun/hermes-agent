@@ -301,8 +301,28 @@ TOOLSETS = {
     },
 
     "feishu_doc": {
-        "description": "Read Feishu/Lark document content",
-        "tools": ["feishu_doc_read"],
+        "description": "Read and safely update Feishu/Lark document content",
+        "tools": [
+            "feishu_doc_read",
+            "feishu_doc_prepare_meeting_minutes",
+            "feishu_doc_apply_change",
+            "feishu_doc_cancel_change",
+        ],
+        "includes": []
+    },
+
+    "feishu_bitable": {
+        "description": "Read Feishu/Lark Base (Bitable) apps, tables, views, fields, and records",
+        "tools": [
+            "feishu_bitable_get_app",
+            "feishu_bitable_list_tables",
+            "feishu_bitable_list_views",
+            "feishu_bitable_list_fields",
+            "feishu_bitable_list_records",
+            "feishu_bitable_read_table",
+            "feishu_bitable_prepare_record_update",
+            "feishu_bitable_apply_record_update",
+        ],
         "includes": []
     },
 
@@ -517,6 +537,17 @@ TOOLSETS = {
         "description": "Feishu/Lark bot toolset - enterprise messaging via Feishu/Lark (full access)",
         "tools": _HERMES_CORE_TOOLS + [
             "feishu_doc_read",
+            "feishu_doc_prepare_meeting_minutes",
+            "feishu_doc_apply_change",
+            "feishu_doc_cancel_change",
+            "feishu_bitable_get_app",
+            "feishu_bitable_list_tables",
+            "feishu_bitable_list_views",
+            "feishu_bitable_list_fields",
+            "feishu_bitable_list_records",
+            "feishu_bitable_read_table",
+            "feishu_bitable_prepare_record_update",
+            "feishu_bitable_apply_record_update",
             "feishu_drive_list_comments",
             "feishu_drive_list_comment_replies",
             "feishu_drive_reply_comment",

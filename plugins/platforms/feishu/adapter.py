@@ -3283,6 +3283,7 @@ class FeishuAdapter(BasePlatformAdapter):
         chat_id = getattr(message, "chat_id", "") or ""
         chat_info = await self.get_chat_info(chat_id)
         sender_profile = await self._resolve_sender_profile(sender_id, is_bot=is_bot)
+        self._inject_feishu_doc_client()
         source = self.build_source(
             chat_id=chat_id,
             chat_name=chat_info.get("name") or chat_id or "Feishu Chat",
@@ -4721,6 +4722,7 @@ class FeishuAdapter(BasePlatformAdapter):
             raise RuntimeError("websockets not installed; websocket mode unavailable")
         domain = FEISHU_DOMAIN if self._domain_name != "lark" else LARK_DOMAIN
         self._client = self._build_lark_client(domain)
+        self._inject_feishu_doc_client()
         self._event_handler = self._build_event_handler()
         if self._event_handler is None:
             raise RuntimeError("failed to build Feishu event handler")
@@ -4753,6 +4755,7 @@ class FeishuAdapter(BasePlatformAdapter):
             raise RuntimeError("aiohttp not installed; webhook mode unavailable")
         domain = FEISHU_DOMAIN if self._domain_name != "lark" else LARK_DOMAIN
         self._client = self._build_lark_client(domain)
+        self._inject_feishu_doc_client()
         self._event_handler = self._build_event_handler()
         if self._event_handler is None:
             raise RuntimeError("failed to build Feishu event handler")
@@ -4776,6 +4779,23 @@ class FeishuAdapter(BasePlatformAdapter):
             .log_level(lark.LogLevel.WARNING)
             .build()
         )
+
+    def _inject_feishu_doc_client(self) -> None:
+        """Expose the live SDK client to Feishu document/Base tools."""
+        if not self._client:
+            return
+        try:
+            from tools.feishu_doc_tool import set_client as set_doc_client
+
+            set_doc_client(self._client)
+        except Exception:
+            logger.debug("[Feishu] Could not inject Feishu document client", exc_info=True)
+        try:
+            from tools.feishu_bitable_tool import set_client as set_bitable_client
+
+            set_bitable_client(self._client)
+        except Exception:
+            logger.debug("[Feishu] Could not inject Feishu Bitable client", exc_info=True)
 
     async def _feishu_send_with_retry(
         self,

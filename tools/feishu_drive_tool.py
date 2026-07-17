@@ -324,7 +324,9 @@ FEISHU_DRIVE_ADD_COMMENT_SCHEMA = {
     "description": (
         "Add a new whole-document comment on a Feishu document. "
         "Use this for whole-document comments or as a fallback when "
-        "reply_comment fails with code 1069302."
+        "reply_comment fails with code 1069302. Do not use this to read, preview, "
+        "replace, update, or modify the body of a Feishu /docx/ document; use "
+        "feishu_doc_prepare_meeting_minutes and feishu_doc_apply_change instead."
     ),
     "parameters": {
         "type": "object",
