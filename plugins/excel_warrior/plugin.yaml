@@ -1,0 +1,13 @@
+name: excel-warrior
+version: 1.0.0
+description: "Bagel capability layer for Project Tracking, Meeting Minutes, Portal data, and legacy Excel/HTML workflows."
+author: local
+kind: backend
+pip_dependencies:
+  - "beautifulsoup4>=4.12,<5"
+  - "python-docx>=1.1,<2"
+provides_tools:
+  - excel_warrior_project
+  - excel_warrior_minutes
+  - excel_warrior_doc_reader
+  - excel_warrior_legacy_html

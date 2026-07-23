@@ -1,0 +1,49 @@
+[
+  {
+    "id": "status-clear-project-and-maison",
+    "prompt": "把 Tiffany 的 Gen AI Client Knowledge 状态改成 Q3-Pilot",
+    "expected_behavior": "Resolve Tiffany to maison_id=tiffany and Gen AI Client Knowledge to project_id=clienteling_gen_ai_client_knowledge, then update exactly one project_maison_status record.",
+    "expected_files": ["portal/data/project_maison_status.json"]
+  },
+  {
+    "id": "remark-only",
+    "prompt": "给 Guerlain 的 Enrich project scaling 加备注 Strong interest by HQ - dry run",
+    "expected_behavior": "Resolve Guerlain and Enrich project scaling, then update only remark/updated_at for the existing record without changing status.",
+    "expected_files": ["portal/data/project_maison_status.json"]
+  },
+  {
+    "id": "maison-alias-pcd",
+    "prompt": "把 PCD 的 Enrich project scaling 改成 Run",
+    "expected_behavior": "Resolve PCD/Perfume Dior to perfume_christine_dior or ask for confirmation if aliases are not configured.",
+    "expected_files": ["portal/data/project_maison_status.json"],
+    "aliases": {
+      "PCD": "perfume_christine_dior",
+      "Perfume Dior": "perfume_christine_dior",
+      "Perfume Christine Dior": "perfume_christine_dior"
+    }
+  },
+  {
+    "id": "ambiguous-project",
+    "prompt": "把 DREAM 的状态改成 Q2-Pilot",
+    "expected_behavior": "Do not edit. Ask which maison and which DREAM-related project the user means.",
+    "expected_files": []
+  },
+  {
+    "id": "invalid-status",
+    "prompt": "把 Tiffany 的 Gen AI Client Knowledge 改成 In Progress",
+    "expected_behavior": "Do not edit. Explain that In Progress is not in status_config.json and show valid statuses.",
+    "expected_files": []
+  },
+  {
+    "id": "missing-project",
+    "prompt": "把 Tiffany 的 Magic Unicorn Project 改成 Run",
+    "expected_behavior": "Do not edit. Explain that no project matches Magic Unicorn Project.",
+    "expected_files": []
+  },
+  {
+    "id": "json-only-boundary",
+    "prompt": "任何修改样例执行后",
+    "expected_behavior": "git diff --name-only should show only portal/data/*.json for data edits.",
+    "expected_files": ["portal/data/*.json"]
+  }
+]

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feishu Project Meeting Records"
+  short_description: "按项目查找关联会议记录并总结最近一次会议日期与重点"
+  default_prompt: "Use $feishu-project-meeting-records to find this project’s latest linked Meeting Record and summarize its date and key points."

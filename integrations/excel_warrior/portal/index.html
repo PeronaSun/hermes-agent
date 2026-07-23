@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Tracking Portal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">LVMH · Project Tracking</div>
+    <nav class="nav" id="nav">
+      <a href="#/dashboard" data-view="dashboard">Dashboard</a>
+      <a href="#/matrix" data-view="matrix">Matrix</a>
+      <a href="#/maison" data-view="maison">Maison</a>
+      <a href="#/project" data-view="project">Project</a>
+      <a href="#/health" data-view="health">Data Health</a>
+    </nav>
+  </header>
+  <div class="subnav" id="subnav"></div>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main id="main"></main>
+  </div>
+  <div class="lightbox-overlay" id="lightbox"></div>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>

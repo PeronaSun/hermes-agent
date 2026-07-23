@@ -5,8 +5,6 @@ import json
 import time
 from pathlib import Path
 
-import pytest
-
 from agent.prompt_builder import PLATFORM_HINTS
 from tools.registry import registry
 
@@ -26,10 +24,7 @@ def _fake_fields():
         {"field_id": "fld_owner", "field_name": "Owner", "type": 11, "property": {"multiple": True}},
         {"field_id": "fld_due", "field_name": "Due Date", "type": 5, "property": {"date_formatter": "yyyy/MM/dd"}},
         {"field_id": "fld_done", "field_name": "Done", "type": 7, "property": {}},
-        {"field_id": "fld_status", "field_name": "Status", "type": 3, "property": {"options": [
-            {"name": "Open", "id": "opt_open"},
-            {"name": "Ongoing", "id": "optOUYXgzj"},
-        ]}},
+        {"field_id": "fld_status", "field_name": "Status", "type": 3, "property": {"options": [{"name": "Open"}]}},
         {"field_id": "fld_files", "field_name": "Files", "type": 17, "property": {}},
         {"field_id": "fld_formula", "field_name": "Formula", "type": 20, "property": {"formula": "1+1"}},
     ]
@@ -487,55 +482,6 @@ def test_successful_confirmed_text_update_and_verification(monkeypatch, tmp_path
     assert put_calls[0]["body"] == {"fields": {"Risk": "test成功"}}
 
 
-def test_prepare_and_apply_single_select_by_name(monkeypatch, tmp_path):
-    _pending_in_tmp(monkeypatch, tmp_path)
-    calls, records = _install_fake_bitable(monkeypatch)
-    preview = bt.bitable_prepare_record_update(
-        base_url=BASE_URL,
-        table_name="Project Tracking",
-        matching_conditions={"Task": "Launch checklist"},
-        target_field="Status",
-        proposed_new_value="Ongoing",
-    )
-    assert preview["proposed_new_value"] == "Ongoing"
-    result = bt.bitable_apply_record_update(
-        change_id=preview["change_id"],
-        confirmation_text=f"确认修改 {preview['change_id']}",
-    )
-    assert result["verified"] is True
-    assert records[0]["fields"]["Status"] == "Ongoing"
-    assert [call for call in calls if call["method"] == "PUT"][-1]["body"] == {
-        "fields": {"Status": "Ongoing"}
-    }
-
-
-def test_prepare_single_select_option_id_normalizes_to_name(monkeypatch, tmp_path):
-    _pending_in_tmp(monkeypatch, tmp_path)
-    _install_fake_bitable(monkeypatch)
-    preview = bt.bitable_prepare_record_update(
-        base_url=BASE_URL,
-        table_name="Project Tracking",
-        matching_conditions={"Task": "Launch checklist"},
-        target_field="fld_status",
-        proposed_new_value="optOUYXgzj",
-    )
-    assert preview["field_name"] == "Status"
-    assert preview["proposed_new_value"] == "Ongoing"
-
-
-def test_prepare_single_select_rejects_unknown_option(monkeypatch, tmp_path):
-    _pending_in_tmp(monkeypatch, tmp_path)
-    _install_fake_bitable(monkeypatch)
-    with pytest.raises(ValueError, match="可选值：Open, Ongoing"):
-        bt.bitable_prepare_record_update(
-            base_url=BASE_URL,
-            table_name="Project Tracking",
-            matching_conditions={"Task": "Launch checklist"},
-            target_field="Status",
-            proposed_new_value="NotAStatus",
-        )
-
-
 def test_apply_invalid_change_id(monkeypatch, tmp_path):
     _pending_in_tmp(monkeypatch, tmp_path)
     _install_fake_bitable(monkeypatch)
@@ -618,7 +564,7 @@ def test_unsupported_field_type(monkeypatch, tmp_path):
         "proposed_new_value": "Bob",
     }))
     assert out["code"] == "unsupported_field_type"
-    assert "支持 Text 和 SingleSelect 字段" in out["error"]
+    assert "仅支持 Text 字段" in out["error"]
 
 
 def test_no_fallback_to_comments_or_docs_for_bitable_writes():

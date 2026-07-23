@@ -1,0 +1,10 @@
+{
+  "_status": "2026-07-09 生产迁移专用。只需要列'JSON 名字变了但明确是同一个项目'的改名——不用列删除:analyze_rebuild 现在会自动丢弃任何在 Base FACT 找不到(改名后)对应的 JSON 项目,不需要 deletions 手动列。",
+  "renames": {
+    "【Clienteling】Gen AI Client Knowledge": "Client Knowledge",
+    "【Gen AI Content Hub】Content Tagging & Distrubution": "Content Tagging",
+    "【Clienteling】Gen AI Contextual Outreach": "Contextual Outreach",
+    "【Client Community】CRM upskilling and community": "CRM upskilling and community"
+  },
+  "deletions": []
+}

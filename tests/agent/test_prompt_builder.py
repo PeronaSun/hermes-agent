@@ -1126,6 +1126,18 @@ class TestPromptBuilderConstants:
         assert "feishu_bitable_read_table" in hint
         assert "feishu_bitable_prepare_record_update" in hint
         assert "feishu_bitable_apply_record_update" in hint
+        assert "feishu_bitable_prepare_project_meeting_write" in hint
+        assert "feishu_bitable_apply_project_meeting_write" in hint
+        assert "feishu-base-workflow" in hint
+        assert "deterministic workflow" in hint
+        assert "strict tool budget" in hint
+        assert "Do not manually call feishu_bitable_read_table" in hint
+        assert "ask for the missing input and stop" in hint
+        assert "show the concise Chinese error and stop" in hint
+        assert "是否确认写入飞书？" in hint
+        assert "Project, Maison, and Meeting Notes" in hint
+        assert "Do not create fbu_* single-cell changes" in hint
+        assert "never show or ask the user to type a Change ID" in hint
         assert "/base/" in hint
         assert "read_file" in hint
         assert "Never substitute Feishu comments" in hint

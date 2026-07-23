@@ -379,6 +379,11 @@ class ChatCompletionsTransport(ProviderTransport):
         is_kimi = params.get("is_kimi", False)
         is_tokenhub = params.get("is_tokenhub", False)
         reasoning_config = _reasoning_config_for_model(model, params.get("reasoning_config"))
+        reasoning_disabled = bool(
+            reasoning_config
+            and isinstance(reasoning_config, dict)
+            and reasoning_config.get("enabled") is False
+        )
 
         if ephemeral is not None and max_tokens_fn:
             api_kwargs.update(max_tokens_fn(ephemeral))
@@ -389,12 +394,7 @@ class ChatCompletionsTransport(ProviderTransport):
 
         # Kimi: top-level reasoning_effort (unless thinking disabled)
         if is_kimi:
-            _kimi_thinking_off = bool(
-                reasoning_config
-                and isinstance(reasoning_config, dict)
-                and reasoning_config.get("enabled") is False
-            )
-            if not _kimi_thinking_off:
+            if not reasoning_disabled:
                 _kimi_effort = "medium"
                 if reasoning_config and isinstance(reasoning_config, dict):
                     _e = (reasoning_config.get("effort") or "").strip().lower()
@@ -404,12 +404,7 @@ class ChatCompletionsTransport(ProviderTransport):
 
         # Tencent TokenHub: top-level reasoning_effort (unless thinking disabled)
         if is_tokenhub:
-            _tokenhub_thinking_off = bool(
-                reasoning_config
-                and isinstance(reasoning_config, dict)
-                and reasoning_config.get("enabled") is False
-            )
-            if not _tokenhub_thinking_off:
+            if not reasoning_disabled:
                 _tokenhub_effort = "high"
                 if reasoning_config and isinstance(reasoning_config, dict):
                     _e = (reasoning_config.get("effort") or "").strip().lower()
@@ -459,17 +454,17 @@ class ChatCompletionsTransport(ProviderTransport):
 
         # Kimi extra_body.thinking
         if is_kimi:
-            _kimi_thinking_enabled = True
-            if reasoning_config and isinstance(reasoning_config, dict):
-                if reasoning_config.get("enabled") is False:
-                    _kimi_thinking_enabled = False
             extra_body["thinking"] = {
-                "type": "enabled" if _kimi_thinking_enabled else "disabled",
+                "type": "disabled" if reasoning_disabled else "enabled",
             }
 
         # Reasoning. LM Studio is handled above via top-level reasoning_effort,
         # so skip emitting extra_body.reasoning for it.
-        if params.get("supports_reasoning", False) and not params.get("is_lmstudio", False):
+        if (
+            params.get("supports_reasoning", False)
+            and not params.get("is_lmstudio", False)
+            and not reasoning_disabled
+        ):
             if is_github_models:
                 gh_reasoning = params.get("github_reasoning_extra")
                 if gh_reasoning is not None:
@@ -497,14 +492,39 @@ class ChatCompletionsTransport(ProviderTransport):
         additions = params.get("extra_body_additions")
         if additions:
             extra_body.update(additions)
-
-        if extra_body:
-            api_kwargs["extra_body"] = extra_body
+            if reasoning_disabled:
+                extra_body.pop("reasoning", None)
+                extra_body.pop("reasoning_effort", None)
+                if provider_name == "gemini":
+                    extra_body.pop("thinking_config", None)
+                    nested = extra_body.get("extra_body")
+                    if isinstance(nested, dict):
+                        google_extra = nested.get("google")
+                        if isinstance(google_extra, dict):
+                            google_extra.pop("thinking_config", None)
 
         # Request overrides last (service_tier etc.)
         overrides = params.get("request_overrides")
         if overrides:
             api_kwargs.update(overrides)
+
+        if extra_body:
+            api_kwargs["extra_body"] = extra_body
+
+        if reasoning_disabled:
+            api_kwargs.pop("reasoning_effort", None)
+            api_kwargs.pop("reasoning", None)
+            request_extra_body = api_kwargs.get("extra_body")
+            if isinstance(request_extra_body, dict):
+                request_extra_body.pop("reasoning", None)
+                request_extra_body.pop("reasoning_effort", None)
+                if provider_name == "gemini":
+                    request_extra_body.pop("thinking_config", None)
+                    nested = request_extra_body.get("extra_body")
+                    if isinstance(nested, dict):
+                        google_extra = nested.get("google")
+                        if isinstance(google_extra, dict):
+                            google_extra.pop("thinking_config", None)
 
         return api_kwargs
 
@@ -578,6 +598,11 @@ class ChatCompletionsTransport(ProviderTransport):
 
         # Provider-specific api_kwargs extras (reasoning_effort, metadata, etc.)
         reasoning_config = _reasoning_config_for_model(model, params.get("reasoning_config"))
+        reasoning_disabled = bool(
+            reasoning_config
+            and isinstance(reasoning_config, dict)
+            and reasoning_config.get("enabled") is False
+        )
         extra_body_from_profile, top_level_from_profile = (
             profile.build_api_kwargs_extras(
                 reasoning_config=reasoning_config,
@@ -590,6 +615,9 @@ class ChatCompletionsTransport(ProviderTransport):
             )
         )
         api_kwargs.update(top_level_from_profile)
+        if reasoning_disabled:
+            api_kwargs.pop("reasoning_effort", None)
+            api_kwargs.pop("reasoning", None)
 
         # extra_body assembly
         extra_body: dict[str, Any] = {}
@@ -623,6 +651,18 @@ class ChatCompletionsTransport(ProviderTransport):
                     extra_body.update(v)
                 else:
                     api_kwargs[k] = v
+
+        if reasoning_disabled:
+            api_kwargs.pop("reasoning_effort", None)
+            api_kwargs.pop("reasoning", None)
+            extra_body.pop("reasoning", None)
+            extra_body.pop("reasoning_effort", None)
+            extra_body.pop("thinking_config", None)
+            nested = extra_body.get("extra_body")
+            if isinstance(nested, dict):
+                google_extra = nested.get("google")
+                if isinstance(google_extra, dict):
+                    google_extra.pop("thinking_config", None)
 
         if extra_body:
             # Native Gemini (generativelanguage.googleapis.com, non-/openai)

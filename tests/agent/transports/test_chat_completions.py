@@ -410,6 +410,48 @@ class TestChatCompletionsBuildKwargs:
         # Nous rejects enabled=false; reasoning omitted entirely
         assert "reasoning" not in kw.get("extra_body", {})
 
+    def test_disabled_reasoning_strips_generic_reasoning_payload(self, transport):
+        msgs = [{"role": "user", "content": "Hi"}]
+        kw = transport.build_kwargs(
+            model="gpt-4o",
+            messages=msgs,
+            supports_reasoning=True,
+            reasoning_config={"enabled": False},
+        )
+        assert "reasoning" not in kw
+        assert "reasoning_effort" not in kw
+        assert "reasoning" not in kw.get("extra_body", {})
+
+    def test_disabled_reasoning_strips_request_override_payloads(self, transport):
+        msgs = [{"role": "user", "content": "Hi"}]
+        kw = transport.build_kwargs(
+            model="gemini-3-flash-preview",
+            messages=msgs,
+            provider_name="gemini",
+            base_url="https://generativelanguage.googleapis.com/v1beta",
+            supports_reasoning=True,
+            reasoning_config={"enabled": False},
+            extra_body_additions={
+                "reasoning": {"enabled": True, "effort": "high"},
+                "thinking_config": {"includeThoughts": True},
+                "extra_body": {
+                    "google": {
+                        "thinking_config": {"include_thoughts": True},
+                    },
+                },
+            },
+            request_overrides={
+                "reasoning_effort": "high",
+                "extra_body": {"reasoning": {"effort": "high"}},
+            },
+        )
+        assert "reasoning_effort" not in kw
+        extra_body = kw.get("extra_body", {})
+        assert "reasoning" not in extra_body
+        assert "thinking_config" not in extra_body
+        nested_google = extra_body.get("extra_body", {}).get("google", {})
+        assert "thinking_config" not in nested_google
+
     def test_ollama_num_ctx(self, transport):
         from providers import get_provider_profile
         profile = get_provider_profile("custom")
@@ -500,7 +542,7 @@ class TestChatCompletionsBuildKwargs:
             "thinking_level": "low",
         }
 
-    def test_gemini_native_disabled_reasoning_hides_thoughts(self, transport):
+    def test_gemini_native_disabled_reasoning_omits_thinking_config(self, transport):
         msgs = [{"role": "user", "content": "Hi"}]
         kw = transport.build_kwargs(
             model="gemini-3-flash-preview",
@@ -509,9 +551,7 @@ class TestChatCompletionsBuildKwargs:
             base_url="https://generativelanguage.googleapis.com/v1beta",
             reasoning_config={"enabled": False},
         )
-        assert kw["extra_body"]["thinking_config"] == {
-            "includeThoughts": False,
-        }
+        assert "thinking_config" not in kw.get("extra_body", {})
 
     def test_gemini_openai_compat_xhigh_clamps_to_high(self, transport):
         msgs = [{"role": "user", "content": "Hi"}]
@@ -824,7 +864,7 @@ class TestChatCompletionsLmStudioReasoning:
         )
         assert kw["reasoning_effort"] == "medium"
 
-    def test_disabled_keeps_none_when_off_allowed(self, transport):
+    def test_disabled_omits_reasoning_effort_when_off_allowed(self, transport):
         kw = transport.build_kwargs(
             model="gpt-oss", messages=[{"role": "user", "content": "Hi"}],
             is_lmstudio=True,
@@ -832,7 +872,7 @@ class TestChatCompletionsLmStudioReasoning:
             reasoning_config={"enabled": False},
             lmstudio_reasoning_options=["off", "on"],
         )
-        assert kw["reasoning_effort"] == "none"
+        assert "reasoning_effort" not in kw
 
     def test_no_options_falls_back_to_legacy_behavior(self, transport):
         # When the probe failed or returned nothing, allowed_options is unknown;

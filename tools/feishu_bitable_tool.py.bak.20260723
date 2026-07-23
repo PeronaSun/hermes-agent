@@ -320,30 +320,6 @@ def _is_select_field(field: dict) -> bool:
     return field_type in {3, "3", "single_select", "SingleSelect", "单选"}
 
 
-def _coerce_record_update_value(field: dict, value):
-    """Validate and normalize a value accepted by the generic safe-update flow."""
-    if _is_text_field(field):
-        return value
-    if _is_select_field(field):
-        text = str(value or "").strip()
-        if not text:
-            raise ValueError(f"{field.get('field_name')} 的单选值不能为空。")
-        options = (field.get("property") or {}).get("options") or []
-        for option in options:
-            name = str(option.get("name") or option.get("text") or "").strip()
-            option_id = str(option.get("id") or option.get("option_id") or "").strip()
-            if text == option_id or text.casefold() == name.casefold():
-                return name
-        available = [str(option.get("name") or option.get("text") or "").strip() for option in options]
-        available = [name for name in available if name]
-        suffix = f"可选值：{', '.join(available)}。" if available else "该字段没有可用选项。"
-        raise ValueError(f"{field.get('field_name')} 不存在单选项“{text}”。{suffix}")
-    raise TypeError(
-        f"暂不支持更新该字段类型：{field.get('field_name')} ({field.get('field_type')})。"
-        "当前支持 Text 和 SingleSelect 字段。"
-    )
-
-
 def _is_multi_select_field(field: dict) -> bool:
     field_type = field.get("field_type")
     return field_type in {4, "4", "multi_select", "MultiSelect", "多选"}
@@ -1015,7 +991,8 @@ def bitable_prepare_record_update(
     target = _find_field(fields, target_field)
     if not target.get("is_writable", True):
         raise ValueError(f"字段不可写：{target.get('field_name') or target_field}")
-    normalized_new_value = _coerce_record_update_value(target, proposed_new_value)
+    if not _is_text_field(target):
+        raise TypeError(f"暂不支持更新该字段类型：{target.get('field_name')} ({target.get('field_type')})。当前仅支持 Text 字段。")
 
     records_result = bitable_list_records(
         resolved["app_token"],
@@ -1059,7 +1036,7 @@ def bitable_prepare_record_update(
         "field_name": field_name,
         "field_type": target.get("field_type"),
         "old_value": old_value,
-        "proposed_new_value": normalized_new_value,
+        "proposed_new_value": proposed_new_value,
         "user_id": str(user_id or ""),
         "chat_id": str(chat_id or ""),
         "created_at": now,
@@ -1080,7 +1057,7 @@ def bitable_prepare_record_update(
         "matching_conditions": conditions,
         "field_name": field_name,
         "old_value": old_value,
-        "proposed_new_value": normalized_new_value,
+        "proposed_new_value": proposed_new_value,
         "write_performed": False,
     }
 
@@ -2380,7 +2357,7 @@ FEISHU_BITABLE_PREPARE_RECORD_UPDATE_SCHEMA = {
     "name": "feishu_bitable_prepare_record_update",
     "description": (
         "Preview a safe Feishu Base/Bitable single-cell update. Re-reads live records, requires exactly one "
-        "matching record, supports Text and SingleSelect fields, and returns a Change ID. Does not write."
+        "matching record, supports Text fields first, and returns a Change ID. Does not write."
     ),
     "parameters": {
         "type": "object",
@@ -2398,7 +2375,7 @@ FEISHU_BITABLE_PREPARE_RECORD_UPDATE_SCHEMA = {
                 )
             },
             "target_field": {"type": "string", "description": "Target field name or field_id."},
-            "proposed_new_value": {"description": "New Text value or SingleSelect option name/option ID to preview."},
+            "proposed_new_value": {"description": "New Text value to preview."},
             "user_id": {"type": "string", "description": "Optional Feishu user id for confirmation binding."},
             "chat_id": {"type": "string", "description": "Optional Feishu chat id for confirmation binding."},
         },

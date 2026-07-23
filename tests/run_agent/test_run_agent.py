@@ -1858,7 +1858,9 @@ class TestBuildApiKwargs:
         agent.reasoning_config = {"enabled": False}
         messages = [{"role": "user", "content": "hi"}]
         kwargs = agent._build_api_kwargs(messages)
-        assert kwargs["extra_body"]["reasoning"] == {"enabled": False}
+        assert "reasoning" not in kwargs
+        assert "reasoning_effort" not in kwargs
+        assert "reasoning" not in kwargs.get("extra_body", {})
 
     def test_reasoning_not_sent_for_unsupported_openrouter_model(self, agent):
         agent.base_url = "https://openrouter.ai/api/v1"
