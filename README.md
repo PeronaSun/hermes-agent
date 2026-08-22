@@ -1,3 +1,26 @@
+# Bagel — Feishu-integrated AI Agent
+
+Bagel is an enterprise AI agent I adapted from the open-source [Hermes Agent](https://github.com/NousResearch/hermes-agent) framework during my internship at LVMH.
+
+It is designed to support clienteling project management workflows through Feishu integration, including:
+
+- Retrieving information from Feishu documents and spreadsheets
+- Summarizing meeting notes and extracting action items
+- Assigning task owners and updating deadlines
+- Tracking project status and risks
+- Writing structured updates back to project tracking tables
+
+## My Work
+
+I was responsible for adapting Hermes Agent to the business workflow, defining the product requirements and agent workflow, integrating Feishu-based tools, testing task execution, and iterating on prompts and tool-calling logic.
+
+The project focuses on turning a general-purpose AI agent framework into a practical enterprise workflow assistant.
+
+---
+
+## Original Hermes Agent
+
+The content below is from the original open-source Hermes Agent project.
 <p align="center">
   <img src="assets/banner.png" alt="Hermes Agent" width="100%">
 </p>
